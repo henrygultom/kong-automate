@@ -1,0 +1,37 @@
+---
+
+- name: Validate kong config
+  shell: >
+      kong check {{ kong_conf_dir }}/kong.conf
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/usr/local/bin"
+  when: kong_version is version_compare('0.9.0', '>=')
+
+- name: Reload kong
+  shell: >
+      ulimit -n "{{ kong_max_files_limit }}" && \
+        kong reload --conf {{ kong_conf_dir }}/kong.conf --nginx-conf {{ kong_conf_dir }}/custom-nginx.template
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/usr/local/bin"
+
+- name: Restart kong
+  shell: >
+      ulimit -n "{{ kong_max_files_limit }}" && \
+        kong restart --conf {{ kong_conf_dir }}/kong.conf --nginx-conf {{ kong_conf_dir }}/custom-nginx.template
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/usr/local/bin"
+
+- name: Reload kong with init script
+  service:
+    name: kong
+    state: reloaded
+
+- name: Restart kong with init script
+  service:
+    name: kong
+    state: restarted
+    sleep: 2  # stop race conditions
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
