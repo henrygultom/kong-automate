@@ -14,7 +14,7 @@
         state: present
         request_path: "{{item.request_path}}"
       with_items:
-        - name: "mockbin"
+        - name: "gtoms"
           upstream_url: "http://gtoms.com"
           request_host: "gtoms.com"
           request_path: "/gtoms"
