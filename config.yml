@@ -15,9 +15,9 @@
         request_path: "{{item.request_path}}"
       with_items:
         - name: "mockbin"
-          upstream_url: "http://mockbin.com"
-          request_host: "mockbin.com"
-          request_path: "/mockbin"
+          upstream_url: "http://gtoms.com"
+          request_host: "gtoms.com"
+          request_path: "/gtoms"
           strip_request_path: yes
       register: response
 
