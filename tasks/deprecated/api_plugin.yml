@@ -1,0 +1,62 @@
+---
+
+# Get list of plugins
+- name: Get list of kong plugins enabled for api object | Plugins
+  uri:
+    url: "{{ kong_admin_api_url }}/apis/{{ kong_api_obj_name }}/plugins"
+  register: api_plugins
+
+- name: Create tmp file for request data required to configure kong plugin object | Plugins
+  template: src=api_plugin_obj.j2 dest=/tmp/{{ item.name }}_plugin.obj
+  with_items: "{{ kong_api_obj_plugins }}"
+  delegate_to: 127.0.0.1
+  become: false
+
+# Enable plugins
+- name: Enable kong plugins for api object | Plugins
+  uri:
+     url:    "{{ kong_admin_api_url }}/apis/{{ kong_api_obj_name }}/plugins/"
+     body:   "{{ lookup('file','/tmp/' + item.name + '_plugin.obj')|regex_replace('\n', '') }}"
+     method: POST
+     status_code: 201
+  with_items: "{{ kong_api_obj_plugins }}"
+  register: enabled_plugins
+  when: not item.name in api_plugins.json.data|default([])|map(attribute='name')
+
+- name: Get kong plugin ids | Plugins
+  template: src=plugin_id.j2 dest=/tmp/{{ item.name }}.id
+  with_items: "{{ api_plugins.json.data|default([]) }}"
+  delegate_to: 127.0.0.1
+  become: false
+
+# Update plugins
+- name: Update kong plugins for api object | Plugins
+  uri:
+     url:    "{{ kong_admin_api_url }}/apis/{{ kong_api_obj_name }}/plugins/{{ lookup('file', '/tmp/' + item.name + '.id') }}"
+     body:   "{{ lookup('file','/tmp/' + item.name + '_plugin.obj')|regex_replace('\n', '') }}"
+     method: PATCH
+     status_code: 200
+  with_items: "{{ kong_api_obj_plugins }}"
+  register: plugins
+  when: item.name in api_plugins.json.data|default([])|map(attribute='name')
+
+## Update plugins | Improved version with Jinja2 v2.8
+#- name: Update kong plugin for api object | Plugins
+#  uri:
+#     url:    "{{ kong_admin_api_url }}/apis/{{ kong_api_obj_name }}/plugins/{{ api_plugins.json.data|selectattr('name', 'equalto', item.name)|map(attribute='id')|first }}"
+#     body:   "{{ lookup('file','/tmp/' + item.name + '_plugin.obj')|regex_replace('\n', '') }}"
+#     method: PATCH
+#     status_code: 200
+#  with_items: "{{ kong_api_obj_plugins }}"
+#  register: plugins
+#  when: item.name in api_plugins.json.data|map(attribute='name')
+
+# Delete plugins
+- name: Delete kong plugins from api object | Plugins
+  uri:
+     url:    "{{ kong_admin_api_url }}/apis/{{ kong_api_obj_name }}/plugins/{{ lookup('file', '/tmp/' + item.name + '.id') }}"
+     method: DELETE
+     status_code: 204
+  with_items: "{{ api_plugins.json.data|default([]) }}"
+  register: plugins
+  when: not item.name in kong_api_obj_plugins|map(attribute='name')

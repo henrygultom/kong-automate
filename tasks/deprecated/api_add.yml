@@ -1,1 +1,34 @@
+---
 
+- name: Create payload json file for adding api object config to kong
+  template: src=api_obj.json.j2 dest=/tmp/api_obj.json
+  delegate_to: 127.0.0.1
+  become: false
+
+- name: Add api object to kong
+  uri:
+    url:    "{{ kong_admin_api_url|default('http://localhost:8001') }}/apis/"
+    method: POST
+    body:   "{{ lookup('file','/tmp/api_obj.json') }}"
+    status_code: "201"
+    body_format: json
+  register: api
+  when: not kong_api_obj_name in apis.json.data|map(attribute='name')
+
+- debug: msg="{{ kong_api_obj_name }} api object already exists - ({{ apis.json.data|map(attribute='name')|join(',') }})"
+  when: kong_api_obj_name in apis.json.data|map(attribute='name')
+
+- name: Update api object configured in kong
+  uri:
+    url:    "{{ kong_admin_api_url|default('http://localhost:8001') }}/apis/{{ kong_api_obj_name }}"
+    method: PATCH
+    body:   "{{ lookup('file','/tmp/api_obj.json') }}"
+    status_code: "200"
+    body_format: json
+  register: api
+  when: kong_api_obj_name in apis.json.data|map(attribute='name')
+
+#- debug: var=api
+
+- name: Kong Plugin for API object
+  include_tasks: "api_plugin.yml"
