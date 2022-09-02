@@ -1,8 +1,6 @@
 # ansible-kong-module
 A Module to help manage a [Kong](http://getkong.com) API Gateway
 
-> For a full write-up, please see the blog series: [Kong Up and Running](http://blog.toast38coza.me/kong-up-and-running/)
-
 **Requirements**
 
 * Ansible
@@ -11,11 +9,10 @@ A Module to help manage a [Kong](http://getkong.com) API Gateway
 
 **Quickstart**
 
-
 From a Docker-enabled terminal run:
 
 ```
-git clone git@github.com:toast38coza/ansible-kong-module.git && cd ansible-kong-module
+git clone git@github.com:henrygultom/ansible-kong-module.git && cd ansible-kong-module
 docker-compose up
 ```
 
