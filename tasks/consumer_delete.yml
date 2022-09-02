@@ -1,0 +1,13 @@
+---
+
+- name: Delete consumer object configured in kong
+  uri:
+    url:    "{{ kong_admin_api_url|default('http://localhost:8001') }}/consumers/{{ kong_consumer_config.username }}"
+    method: DELETE
+    status_code: "204,404"
+  register: consumer
+  when: kong_consumer_config.username in consumers.json.data|map(attribute='username')
+
+#- debug: var=consumer
+
+# Note: Deleting a consumer object also deletes plugin objects configured for it
